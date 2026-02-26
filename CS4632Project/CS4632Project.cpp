@@ -1,6 +1,3 @@
-// CS4632Project.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 // this is here because it is here by default
 #include <iostream>
 // this is here so that I can use std::shuffle
@@ -152,6 +149,12 @@ public:
             throw std::exception("Invalid number of cards to get rank.");
         }
     }
+
+    int getRank(std::array<Card*, 5> community_cards) {
+		return evaluate_7cards(cards.at(0)->card_num, cards.at(1)->card_num, community_cards.at(0)->card_num, community_cards.at(1)->card_num, community_cards.at(2)->card_num, community_cards.at(3)->card_num, community_cards.at(4)->card_num);
+    }
+
+
 };
 
 // Game class (formerly Deck class) handles core simulation logic
@@ -165,7 +168,7 @@ public:
 	std::vector<PlayerHand*> active_players;
     // counts the number of cards handed out so that no two players get the same card from deck[]
     int cards_handed;
-    
+	std::array<Card*, 5> community_cards;
     int current_bet;
     // rd and mt are required for shuffling
     std::random_device rd = std::random_device();
@@ -186,6 +189,7 @@ public:
 		
 		// initilize active_players to contain all the players at the start of the game
         active_players = std::vector<PlayerHand*>();
+		community_cards = std::array<Card*, 5>();
         
     }
 
@@ -200,6 +204,9 @@ public:
         for (PlayerHand* p : active_players) {
 			p->available_chips = 5;
         }
+        for (int i = 0; i < 5; i++) {
+			community_cards.at(i) = nullptr;
+        }
         while (active_players.size() > 1) {
             // If we have already run this function and I forgot to clear the cards, clear the cards from each player's deck
             if (cards_handed > 0) {
@@ -209,9 +216,8 @@ public:
             Shuffle();
 
             // deal cards
-            // todo: change the 5 in the while loop to a 2 when switching to Texas Hold'em
-            for (int i = 0; i < 5 * active_players.size(); i++) {
-                active_players.at(i % active_players.size())->give_card(&deck[i]);
+            for (int i = 0; i < 2 * active_players.size(); i++) {
+                active_players.at(i % active_players.size())->give_card(&deck[cards_handed]); // note: cards_handed used to be an i.
                 cards_handed++;
             }
 
@@ -229,9 +235,32 @@ public:
                 active_players.at(i - 1)->print_hand();
             }
 
+            // hand pre-flop betting
+
+            // The flop
+            for (int i = 0; i < 3; i++) {
+                community_cards.at(i) = &deck[cards_handed];
+				cards_handed++;
+            }
+
             // handle raising and player behavior here.
 
-            
+			// The turn
+            community_cards.at(3) = &deck[cards_handed];
+			cards_handed++;
+
+			// handle raising and player behavior here.
+
+			// The river
+            community_cards.at(4) = &deck[cards_handed];
+			cards_handed++;
+
+			// handle raising and player behavior here.
+
+            for (int i = 0; i < 5; i++) {
+                std::cout << "Community card " << i + 1 << ": " << community_cards.at(i)->getName() << "\n";
+            }
+
             rank_hands();
         }
         
@@ -240,7 +269,7 @@ public:
     // Prints out hands in the order of least to greatest (which is also best hand to worst hand)
     void rank_hands() {
         std::vector<PlayerHand*> active_players_copy = active_players;
-        std::sort(active_players_copy.begin(), active_players_copy.end(), [](PlayerHand* a, PlayerHand* b) {return a->getRank() < b->getRank();});
+        std::sort(active_players_copy.begin(), active_players_copy.end(), [this](PlayerHand* a, PlayerHand* b) {return a->getRank(this->community_cards) < b->getRank(this->community_cards);});
         for (int i = 1; i <= active_players_copy.size(); i++) {
             std::cout << "Player " << active_players_copy.at(i - 1)->player_id << " was at rank " << i << "\n";
         }
@@ -289,12 +318,10 @@ int main()
     for (Card c : d1.deck) {
         std::cout << c.getName() << "\n";
     }
-    // demonstrate one game
-    std::cout << "\n\n\nGAME 1\n";
-    d1.playGame();
-    // demonstrate a second game
-    std::cout << "\n\n\nGAME 2\n";
-    d1.playGame();
+    for (int i = 1; i <= 1; i++) {
+        std::cout << "\n\n\nGAME " << i << "\n";
+		d1.playGame();
+    }
     
     std::cout << "END OF PROGRAM";
 }
