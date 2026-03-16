@@ -6,11 +6,16 @@
 #include <random>
 // for std::begin() and std::end()
 #include <iterator>
-//phevaluator library
+// phevaluator library
 #include <phevaluator/phevaluator.h>
 #include <phevaluator/card.h>
 #include <phevaluator/card_sampler.h>
 #include <phevaluator/rank.h>
+// json parser
+#include <nlohmann/json.hpp>
+// for json file input
+#include <fstream>
+
 
 // represents a single card
 class Card {
@@ -91,7 +96,7 @@ public:
         return name + " of " + suit;
     }
 };
-// class PlayerHand represents one player. Later I intend to give a number of chips to the player
+// class PlayerHand represents one player.
 class PlayerHand {
 public:
     // uses a vector of pointers to Cards in deck[]
@@ -257,6 +262,7 @@ public:
 
 			// handle raising and player behavior here.
 
+            std::cout << "\n";
             for (int i = 0; i < 5; i++) {
                 std::cout << "Community card " << i + 1 << ": " << community_cards.at(i)->getName() << "\n";
             }
@@ -305,6 +311,7 @@ public:
 //main method
 int main()
 {
+    int num_games;
     // initialize the game
     Game d1 = Game();
     // demonstrate deck
@@ -318,7 +325,25 @@ int main()
     for (Card c : d1.deck) {
         std::cout << c.getName() << "\n";
     }
-    for (int i = 1; i <= 1; i++) {
+
+
+    std::ifstream f("../configuration.json");
+    if (f.is_open()) {
+        try {
+            nlohmann::json j = nlohmann::json::parse(f);
+            num_games = j["num_games"];
+        }
+        catch (std::exception& e) {
+            std::cout << "Error parsing JSON file: " << e.what() << "\n";
+            num_games = 1;
+        }
+    }
+    else {
+		std::cout << "Could not open JSON file. Defaulting to 1 game.\n";
+		num_games = 1;
+    }
+
+    for (int i = 1; i <= num_games; i++) {
         std::cout << "\n\n\nGAME " << i << "\n";
 		d1.playGame();
     }
