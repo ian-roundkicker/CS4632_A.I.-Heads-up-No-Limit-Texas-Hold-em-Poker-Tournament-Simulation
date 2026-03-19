@@ -172,16 +172,19 @@ void Game::playGame() {
 }
 
 void Game::rank_hands() {
+	//copy active_players to a new vector so that we can sort the new vector without changing the order of active_players
     std::vector<PlayerHand*> active_players_copy = active_players;
     std::sort(active_players_copy.begin(), active_players_copy.end(), [this](PlayerHand* a, PlayerHand* b) {return a->getRank(this->community_cards) < b->getRank(this->community_cards);});
     for (int i = 1; i <= active_players_copy.size(); i++) {
         std::cout << "Player " << active_players_copy.at(i - 1)->player_id << " was at rank " << i << "\n";
     }
+	int winnings = 0;
     for (int i = 0; i < active_players.size(); i++) {
         if (active_players.at(i)->player_id != active_players_copy.at(0)->player_id) {
             // give the chips to the winner and take the chips from the loser
-            active_players_copy.at(0)->available_chips += current_bet;
-            active_players.at(i)->available_chips -= current_bet;
+			winnings = std::min(current_bet, active_players.at(i)->available_chips);
+            active_players_copy.at(0)->available_chips += winnings;
+            active_players.at(i)->available_chips -= winnings;
             if (active_players.at(i)->available_chips <= 0) {
                 active_players.erase(active_players.begin() + i);
                 i--;
