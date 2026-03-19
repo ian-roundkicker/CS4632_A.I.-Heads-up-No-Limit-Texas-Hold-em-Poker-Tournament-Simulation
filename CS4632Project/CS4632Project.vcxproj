@@ -131,7 +131,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AgentBehavior.cpp" />
+    <ClCompile Include="A_RandomAction.cpp" />
+    <ClCompile Include="Card.cpp" />
     <ClCompile Include="CS4632Project.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="PlayerHand.cpp" />
+    <ClCompile Include="sqlite3.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AgentBehavior.h" />
+    <ClInclude Include="A_RandomAction.h" />
+    <ClInclude Include="Card.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="PlayerHand.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
