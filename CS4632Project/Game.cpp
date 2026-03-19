@@ -10,7 +10,7 @@ Game::Game() {
     // initialize players
     players = std::vector<PlayerHand>();
     for (int i = 0; i < 2; i++) {
-        players.push_back(PlayerHand(i + 1));
+        players.push_back(PlayerHand(i + 1, 0));
     }
 
     // initilize active_players to contain all the players at the start of the game

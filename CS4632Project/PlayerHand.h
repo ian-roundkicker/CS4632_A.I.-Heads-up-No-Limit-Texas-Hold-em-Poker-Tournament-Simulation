@@ -19,7 +19,8 @@ public:
 	std::unique_ptr<AgentBehavior> behavior;
 
     // constructor sets up the player_id and card vector
-    PlayerHand(int player_id);
+    PlayerHand(int player_id, int type);
+
 
     // param c is a pointer to a card (Game class is responsible for managing this)
     void give_card(Card* c);

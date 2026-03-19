@@ -1,9 +1,21 @@
 #include "PlayerHand.h"
 
-PlayerHand::PlayerHand(int player_id) : behavior(std::make_unique<A_RandomAction>()), player_id(player_id) {
+//returns a unique pointer to an AgentBehavior object based on the type parameter passed in. This is used to determine the Agent Used
+static std::unique_ptr<AgentBehavior> choose_type(int type) {
+    switch (type)
+    {
+    case 0:
+        return std::make_unique<A_RandomAction>();
+    default:
+        break;
+    }
+}
+
+PlayerHand::PlayerHand(int player_id, int type) : behavior(choose_type(type)), player_id(player_id) {
     cards = std::vector<Card*>();
     available_chips = 5;
 }
+
 
 void PlayerHand::give_card(Card* c) {
     if (cards.size() < 5) {
