@@ -5,6 +5,7 @@
 // this is here so that I can use std::shuffle
 #include <algorithm>
 #include <phevaluator/phevaluator.h>
+#include <memory>
 
 // class PlayerHand represents one player.
 class PlayerHand {
@@ -15,7 +16,7 @@ public:
     // todo: consider using a static variable to handle player_id if c++ has the feature
     int player_id;
     int available_chips;
-	A_RandomAction behavior;
+	std::unique_ptr<AgentBehavior> behavior;
 
     // constructor sets up the player_id and card vector
     PlayerHand(int player_id);
@@ -35,5 +36,10 @@ public:
     // overloaded method returns the rank  of the hand when community cards are considered.
     int getRank(std::array<Card*, 5> community_cards);
 
+    PlayerHand(const PlayerHand&) = delete;
+    PlayerHand& operator=(const PlayerHand&) = delete;
+    PlayerHand(PlayerHand&&) = default;
+    PlayerHand& operator=(PlayerHand&&) = default;
+    ~PlayerHand() = default;
 };
 

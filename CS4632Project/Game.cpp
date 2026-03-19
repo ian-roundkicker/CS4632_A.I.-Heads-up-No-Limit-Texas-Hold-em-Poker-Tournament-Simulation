@@ -21,11 +21,10 @@ Game::Game() {
 
 //todo: change active_players to betting_players
 void Game::handle_bets() {
-    //reset the loop when someone raises.
 	int proposed_bet = current_bet;
     int decision;
     for (int i = 0; i < betting_players.size(); i++) {
-		decision = betting_players.at(i)->behavior.decideAction(&betting_players.at(i)->cards, &community_cards, proposed_bet, betting_players.at(i)->available_chips);
+		decision = betting_players.at(i)->behavior->decideAction(&betting_players.at(i)->cards, &community_cards, proposed_bet, betting_players.at(i)->available_chips);
         if (decision == -1) {
             std::cout << "Player " << betting_players.at(i)->player_id << " folded.\n";
             betting_players.erase(betting_players.begin() + i);
@@ -167,8 +166,10 @@ void Game::playGame() {
         }*/
 
         rank_hands();
+		
     }
-
+    players.clear();
+    
 }
 
 void Game::rank_hands() {

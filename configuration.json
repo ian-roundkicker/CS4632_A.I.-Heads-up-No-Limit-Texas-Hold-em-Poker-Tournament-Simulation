@@ -1,4 +1,6 @@
 {
-  "num_games": 5,
-  "append_to_db": false
+  "num_games": 1,
+  "append_to_db": false,
+  "Bot1": 0,
+  "Bot2": 0
 }
