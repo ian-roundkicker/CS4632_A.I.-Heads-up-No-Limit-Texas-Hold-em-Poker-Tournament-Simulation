@@ -136,15 +136,23 @@
     <ClCompile Include="Card.cpp" />
     <ClCompile Include="CS4632Project.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="RaiseBot.cpp" />
     <ClCompile Include="PlayerHand.cpp" />
     <ClCompile Include="sqlite3.c" />
+    <ClCompile Include="Cautious.cpp" />
+    <ClCompile Include="WeightedRandom.cpp" />
+    <ClCompile Include="WorstBot.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AgentBehavior.h" />
     <ClInclude Include="A_RandomAction.h" />
     <ClInclude Include="Card.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="RaiseBot.h" />
     <ClInclude Include="PlayerHand.h" />
+    <ClInclude Include="Cautious.h" />
+    <ClInclude Include="WeightedRandom.h" />
+    <ClInclude Include="WorstBot.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

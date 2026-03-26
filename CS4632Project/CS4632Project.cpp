@@ -20,23 +20,10 @@ int main()
 {
     // determine the number of games to simulate
     int num_games;
+    int player_id[2];
     // determine whether to create a new database or append to an existing one.
 	bool append_to_db;
-    // initialize the game
-    Game d1 = Game();
-    // this works already, to remove?
-    /*
-    // demonstrate deck
-    std::cout << "Sorted deck:" << "\n";
-    for (Card c : d1.deck) {
-        std::cout << c.getName() << "\n";
-    }
-    // demonstrate sorting function
-    std::cout << "\n\nUnsorted deck:" << "\n";
-    d1.Shuffle();
-    for (Card c : d1.deck) {
-        std::cout << c.getName() << "\n";
-    }*/
+
     // open configuration file
     std::ifstream f("../configuration.json");
     if (f.is_open()) {
@@ -44,6 +31,8 @@ int main()
             nlohmann::json j = nlohmann::json::parse(f);
             num_games = j["num_games"];
 			append_to_db = j["append_to_db"];
+			player_id[0] = j["Bot1"];
+			player_id[1] = j["Bot2"];
         }
         catch (std::exception& e) {
             std::cout << "Error parsing JSON file: " << e.what() << "\n";
@@ -94,6 +83,8 @@ int main()
 		std::exit(1);
 	}
 
+    // initialize the game
+    Game d1 = Game(player_id[0], player_id[1]);
     // run simulation
     for (int i = 1; i <= num_games; i++) {
         std::cout << "\n\n\nGAME " << i << "\n";

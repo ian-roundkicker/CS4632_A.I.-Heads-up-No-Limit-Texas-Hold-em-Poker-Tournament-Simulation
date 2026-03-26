@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <array>
 #include "Card.h"
 class AgentBehavior
 {

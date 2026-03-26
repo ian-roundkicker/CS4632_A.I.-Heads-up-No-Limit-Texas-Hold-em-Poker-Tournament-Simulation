@@ -22,7 +22,7 @@ public:
     std::mt19937 mt = std::mt19937(rd());
 
     //initializes the cards and the players. Does not hand out any cards
-    Game();
+    Game(int player1, int player2);
 
 	void handle_bets();
 

@@ -6,6 +6,14 @@ static std::unique_ptr<AgentBehavior> choose_type(int type) {
     {
     case 0:
         return std::make_unique<A_RandomAction>();
+    case 1:
+        return std::make_unique<WeightedRandom>();
+    case 2:
+		return std::make_unique<WorstBot>();
+    case 3:
+		return std::make_unique<RaiseBot>();
+    case 4:
+		return std::make_unique<Cautious>();
     default:
         break;
     }

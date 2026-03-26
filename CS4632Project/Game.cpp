@@ -1,6 +1,6 @@
 #include "Game.h"
 
-Game::Game() {
+Game::Game(int player1, int player2) {
 	current_bet = 0;
     cards_handed = 0;
     // initialize cards and add to deck
@@ -9,9 +9,8 @@ Game::Game() {
     }
     // initialize players
     players = std::vector<PlayerHand>();
-    for (int i = 0; i < 2; i++) {
-        players.push_back(PlayerHand(i + 1, 0));
-    }
+    players.push_back(PlayerHand(1, player1));
+	players.push_back(PlayerHand(2, player2));
 
     // initilize active_players to contain all the players at the start of the game
     active_players = std::vector<PlayerHand*>();
@@ -21,33 +20,30 @@ Game::Game() {
 
 //todo: change active_players to betting_players
 void Game::handle_bets() {
-	int proposed_bet = current_bet;
+    int proposed_bet = current_bet;
     int decision;
-    for (int i = 0; i < betting_players.size(); i++) {
-		decision = betting_players.at(i)->behavior->decideAction(&betting_players.at(i)->cards, &community_cards, proposed_bet, betting_players.at(i)->available_chips);
+    for (int i = 0; true; i++) {
+        decision = betting_players.at(i % 2)->behavior->decideAction(&betting_players.at(i % 2)->cards, &community_cards, proposed_bet, betting_players.at(i % 2)->available_chips);
         if (decision == -1) {
-            std::cout << "Player " << betting_players.at(i)->player_id << " folded.\n";
-            betting_players.erase(betting_players.begin() + i);
+            std::cout << "Player " << betting_players.at(i%2)->player_id << " folded.\n";
+            betting_players.erase(betting_players.begin() + i%2);
             // change the line below if there are more than 2 players
             return;
         }
         else if (decision == 0) {
-            std::cout << "Player " << betting_players.at(i)->player_id << " called.\n";
+            std::cout << "Player " << betting_players.at(i%2)->player_id << " called.\n";
+            if (i > 0) {
+                current_bet = proposed_bet;
+                return;
+            }
         }
         else {
             // set the current bet to the previously preposed bet
-			current_bet = proposed_bet;
+            current_bet = proposed_bet;
             proposed_bet += decision;
-            std::cout << "Player " << betting_players.at(i)->player_id << " raised to " << proposed_bet << ".\n";
-            if (i == 0) {
-                continue;
-            }
-            else {
-                i = -1;
-            }
+            std::cout << "Player " << betting_players.at(i%2)->player_id << " raised to " << proposed_bet << ".\n";
         }
     }
-	current_bet = proposed_bet;
 }
 
 void Game::temp_postbethandle() {
@@ -65,6 +61,13 @@ void Game::temp_postbethandle() {
     }
     betting_players.at(0)->available_chips += other_player_winnings;
     std::cout << "Player " << betting_players.at(0)->player_id << " won the hand and now has " << betting_players.at(0)->available_chips << " chips.\n";
+    //clear community cards
+    for (int i = 0; i < 5; i++) {
+        community_cards.at(i) = nullptr;
+	}
+    //clear player cards
+	players.at(0).clear_cards();
+	players.at(1).clear_cards();
 }
 
 void Game::playGame() {
@@ -168,7 +171,7 @@ void Game::playGame() {
         rank_hands();
 		
     }
-    players.clear();
+    //players.clear();
     
 }
 

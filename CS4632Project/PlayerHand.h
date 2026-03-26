@@ -2,6 +2,10 @@
 // pointing to this directory's Card.h, not PHEvaluator's Card.h
 #include "Card.h"
 #include "A_RandomAction.h"
+#include "WeightedRandom.h"
+#include "WorstBot.h"
+#include "RaiseBot.h"
+#include "Cautious.h"
 // this is here so that I can use std::shuffle
 #include <algorithm>
 #include <phevaluator/phevaluator.h>
