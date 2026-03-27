@@ -69,7 +69,7 @@ void Game::temp_postbethandle() {
 	players.at(1).clear_cards();
 }
 
-void Game::playGame(int num_chips, sqlite3* db) { // it's probably bad practice to have the database be required to be open by default but I'm just using this once so why bother?
+int Game::playGame(int num_chips, sqlite3* db) { // it's probably bad practice to have the database be required to be open by default but I'm just using this once so why bother?
     //reset active players to contain all the players at the start of the game
     if (active_players.size() > 0) {
         active_players.clear();
@@ -169,7 +169,7 @@ void Game::playGame(int num_chips, sqlite3* db) { // it's probably bad practice 
         rank_hands();
 		
     }
-    
+	return active_players.at(0)->player_id;
 }
 
 void Game::rank_hands() {

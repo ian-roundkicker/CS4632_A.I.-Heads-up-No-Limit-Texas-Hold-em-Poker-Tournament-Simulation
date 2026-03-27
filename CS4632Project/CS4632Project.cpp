@@ -11,6 +11,109 @@
 #include <sqlite3.h>
 #include "Game.h"
 
+static void create_tables(sqlite3* db) {
+    //initialize tables
+    const char* sql;
+    char* errMsg = nullptr;
+    //create game table
+    sql = "CREATE TABLE IF NOT EXISTS game (" \
+        "GameID INTEGER PRIMARY KEY AUTOINCREMENT," \
+        "Bot1ID INTEGER NOT NULL," \
+        "Bot2ID INTEGER NOT NULL," \
+        "GameWinner INTEGER," \
+        "Starting_Chip_Count INTEGER NOT NULL" \
+        ");";
+    if (sqlite3_exec(db, sql, nullptr, nullptr, &errMsg) != SQLITE_OK) {
+        std::cout << "Error creating table: " << errMsg << "\n";
+        sqlite3_free(errMsg);
+        sqlite3_close(db);
+        std::exit(1);
+    }
+    //create round table
+    sql = "CREATE TABLE IF NOT EXISTS round (" \
+        "GameID INTEGER NOT NULL," \
+        "RoundNumber INTEGER NOT NULL," \
+        "RoundWinner INTEGER," \
+        "B1Hand VARCHAR(16)," \
+        "B2Hand VARCHAR(16)," \
+        "RevealedCC VARCHAR(64)," \
+        "PRIMARY KEY (GameID, RoundNumber)," \
+        "FOREIGN KEY (GameID) REFERENCES game(GameID)" \
+        ");";
+    if (sqlite3_exec(db, sql, nullptr, nullptr, &errMsg) != SQLITE_OK) {
+        std::cout << "Error creating table: " << errMsg << "\n";
+        sqlite3_free(errMsg);
+        sqlite3_close(db);
+        std::exit(1);
+    }
+    //create action table
+    sql = "CREATE TABLE IF NOT EXISTS action (" \
+        "GameID INTEGER NOT NULL," \
+        "RoundNumber INTEGER NOT NULL," \
+        "SequenceNumber INTEGER NOT NULL," \
+        "ActingPlayer INTEGER NOT NULL," \
+        "Phase INTEGER NOT NULL," \
+        "Action INTEGER NOT NULL," \
+        "PRIMARY KEY (GameID, RoundNumber, SequenceNumber)," \
+        "FOREIGN KEY (GameID, RoundNumber) " \
+        "REFERENCES round(GameID, RoundNumber)" \
+        ");";
+    if (sqlite3_exec(db, sql, nullptr, nullptr, &errMsg) != SQLITE_OK) {
+        std::cout << "Error creating table: " << errMsg << "\n";
+        sqlite3_free(errMsg);
+        sqlite3_close(db);
+        std::exit(1);
+    }
+}
+
+static void insert_game(sqlite3* db, int bot1_id, int bot2_id, int starting_chip_count) {
+    const char* sql = "INSERT INTO game (Bot1ID, Bot2ID, Starting_Chip_Count) VALUES (?, ?, ?);";
+    sqlite3_stmt* stmt;
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
+        std::cout << "Error preparing statement: " << sqlite3_errmsg(db) << "\n";
+        sqlite3_close(db);
+        std::exit(1);
+    }
+    if (sqlite3_bind_int(stmt, 1, bot1_id) != SQLITE_OK ||
+        sqlite3_bind_int(stmt, 2, bot2_id) != SQLITE_OK ||
+        sqlite3_bind_int(stmt, 3, starting_chip_count) != SQLITE_OK) {
+        std::cout << "Error binding parameters: " << sqlite3_errmsg(db) << "\n";
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        std::exit(1);
+    }
+    if (sqlite3_step(stmt) != SQLITE_DONE) {
+        std::cout << "Error executing statement: " << sqlite3_errmsg(db) << "\n";
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        std::exit(1);
+    }
+    sqlite3_finalize(stmt);
+}
+
+static void add_winner(sqlite3* db, int game_id, int winner_id) {
+	const char* sql = "UPDATE game SET GameWinner = ? WHERE GameID = ?;";
+    sqlite3_stmt* stmt;
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
+        std::cout << "Error preparing statement: " << sqlite3_errmsg(db) << "\n";
+        sqlite3_close(db);
+        std::exit(1);
+    }
+    if (sqlite3_bind_int(stmt, 1, winner_id) != SQLITE_OK ||
+        sqlite3_bind_int(stmt, 2, game_id) != SQLITE_OK) {
+        std::cout << "Error binding parameters: " << sqlite3_errmsg(db) << "\n";
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        std::exit(1);
+    }
+    if (sqlite3_step(stmt) != SQLITE_DONE) {
+        std::cout << "Error executing statement: " << sqlite3_errmsg(db) << "\n";
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        std::exit(1);
+    }
+    sqlite3_finalize(stmt);
+}
 
 //main method
 int main()
@@ -50,81 +153,18 @@ int main()
         std::cout << "Error opening database.\n";
         std::exit(1);
 	}
-
-    //initialize tables
-    const char* sql;
-    char* errMsg = nullptr;
-	//create game table
-    sql = "CREATE TABLE IF NOT EXISTS game (" \
-        "GameID INTEGER PRIMARY KEY AUTOINCREMENT," \
-        "Bot1ID INTEGER NOT NULL," \
-        "Bot2ID INTEGER NOT NULL," \
-        "GameWinner INTEGER," \
-        "Starting_Chip_Count INTEGER NOT NULL" \
-        ");";
-    if (sqlite3_exec(db, sql, nullptr, nullptr, &errMsg) != SQLITE_OK) {
-        std::cout << "Error creating table: " << errMsg << "\n";
-        sqlite3_free(errMsg);
-        sqlite3_close(db);
-        std::exit(1);
-	}
-    //create round table
-    sql = "CREATE TABLE IF NOT EXISTS round (" \
-        "GameID INTEGER NOT NULL," \
-        "RoundNumber INTEGER NOT NULL," \
-        "RoundWinner INTEGER," \
-        "B1Hand VARCHAR(16)," \
-        "B2Hand VARCHAR(16)," \
-        "RevealedCC VARCHAR(64)," \
-        "PRIMARY KEY (GameID, RoundNumber)," \
-        "FOREIGN KEY (GameID) REFERENCES game(GameID)" \
-        ");";
-	if (sqlite3_exec(db, sql, nullptr, nullptr, &errMsg) != SQLITE_OK) {
-        std::cout << "Error creating table: " << errMsg << "\n";
-        sqlite3_free(errMsg);
-        sqlite3_close(db);
-		std::exit(1);
-	}
-    //create action table
-    sql = "CREATE TABLE IF NOT EXISTS action (" \
-        "GameID INTEGER NOT NULL," \
-        "RoundNumber INTEGER NOT NULL," \
-        "SequenceNumber INTEGER NOT NULL," \
-		"ActingPlayer INTEGER NOT NULL," \
-        "Phase INTEGER NOT NULL," \
-        "Action INTEGER NOT NULL," \
-        "PRIMARY KEY (GameID, RoundNumber, SequenceNumber)," \
-        "FOREIGN KEY (GameID, RoundNumber) " \
-        "REFERENCES round(GameID, RoundNumber)" \
-        ");";
-    if (sqlite3_exec(db, sql, nullptr, nullptr, &errMsg) != SQLITE_OK) {
-        std::cout << "Error creating table: " << errMsg << "\n";
-        sqlite3_free(errMsg);
-        sqlite3_close(db);
-        std::exit(1);
-    }
+	create_tables(db);
     // initialize the game
     Game d1 = Game(player_id[0], player_id[1]);
+    
     // run simulation
     for (int i = 1; i <= num_games; i++) {
         std::cout << "\n\n\nGAME " << i << "\n";
         //insert into Game table before other tables have to insert into tables of their own
-		/*sql = "INSERT INTO game " \
-            "(Bot1ID, Bot2ID, Starting_Chip_Count) " \
-            "VALUES (1, 2, 1000);";
-        if (sqlite3_exec(db, sql, nullptr, nullptr, &errMsg) != SQLITE_OK) {
-            std::cout << "Error inserting: " << errMsg << "\n";
-            sqlite3_free(errMsg);
-            //break loop to go straight to closing database connection
-            break;
-        }
-        else {
-            int game_id = sqlite3_last_insert_rowid(db);
-        }*/
-		d1.playGame(num_chips, db);
-
+        insert_game(db, player_id[0], player_id[1], num_chips);
+        int game_id = sqlite3_last_insert_rowid(db);
+	    add_winner(db, game_id, d1.playGame(num_chips, db));
     }
-
 	// close database connection
 	sqlite3_close(db);
     std::cout << "END OF PROGRAM";

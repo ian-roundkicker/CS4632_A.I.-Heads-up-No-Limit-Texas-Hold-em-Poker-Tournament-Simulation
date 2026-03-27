@@ -31,7 +31,7 @@ public:
     void temp_postbethandle();
 
     // Simulates one poker game. We are on texas hold'em
-    void playGame(int num_chips, sqlite3* db);
+    int playGame(int num_chips, sqlite3* db);
 
     // Prints out hands in the order of least to greatest (which is also best hand to worst hand)
     void rank_hands();
