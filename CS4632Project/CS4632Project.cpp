@@ -5,9 +5,6 @@
 #include <fstream>
 // phevaluator library
 #include <phevaluator/phevaluator.h>
-#include <phevaluator/card.h>
-#include <phevaluator/card_sampler.h>
-#include <phevaluator/rank.h>
 // json parser
 #include <nlohmann/json.hpp>
 // sqlite-amalgamation version 3.51.3
@@ -21,8 +18,10 @@ int main()
     // determine the number of games to simulate
     int num_games;
     int player_id[2];
+    int num_chips;
     // determine whether to create a new database or append to an existing one.
 	bool append_to_db;
+    int game_id;
 
     // open configuration file
     std::ifstream f("../configuration.json");
@@ -30,6 +29,7 @@ int main()
         try {
             nlohmann::json j = nlohmann::json::parse(f);
             num_games = j["num_games"];
+			num_chips = j["num_chips"];
 			append_to_db = j["append_to_db"];
 			player_id[0] = j["Bot1"];
 			player_id[1] = j["Bot2"];
@@ -54,11 +54,13 @@ int main()
     //initialize tables
     const char* sql;
     char* errMsg = nullptr;
+	//create game table
     sql = "CREATE TABLE IF NOT EXISTS game (" \
         "GameID INTEGER PRIMARY KEY AUTOINCREMENT," \
-        "P1 TEXT NOT NULL," \
-        "P2 TEXT NOT NULL," \
-        "Winner TEXT" \
+        "Bot1ID INTEGER NOT NULL," \
+        "Bot2ID INTEGER NOT NULL," \
+        "GameWinner INTEGER," \
+        "Starting_Chip_Count INTEGER NOT NULL" \
         ");";
     if (sqlite3_exec(db, sql, nullptr, nullptr, &errMsg) != SQLITE_OK) {
         std::cout << "Error creating table: " << errMsg << "\n";
@@ -66,15 +68,16 @@ int main()
         sqlite3_close(db);
         std::exit(1);
 	}
+    //create round table
     sql = "CREATE TABLE IF NOT EXISTS round (" \
-        "RoundID INTEGER PRIMARY KEY AUTOINCREMENT," \
-        "GameID INTEGER REFERENCES game(GameID)," \
-        "P1R INTEGER NOT NULL," \
-        "P1C INTEGER NOT NULL," \
-        "P2R INTEGER NOT NULL," \
-        "P2C INTEGER NOT NULL," \
-        "Bet INTEGER NOT NULL," \
-        "Result TEXT" \
+        "GameID INTEGER NOT NULL," \
+        "RoundNumber INTEGER NOT NULL," \
+        "RoundWinner INTEGER," \
+        "B1Hand VARCHAR(16)," \
+        "B2Hand VARCHAR(16)," \
+        "RevealedCC VARCHAR(64)," \
+        "PRIMARY KEY (GameID, RoundNumber)," \
+        "FOREIGN KEY (GameID) REFERENCES game(GameID)" \
         ");";
 	if (sqlite3_exec(db, sql, nullptr, nullptr, &errMsg) != SQLITE_OK) {
         std::cout << "Error creating table: " << errMsg << "\n";
@@ -82,13 +85,44 @@ int main()
         sqlite3_close(db);
 		std::exit(1);
 	}
-
+    //create action table
+    sql = "CREATE TABLE IF NOT EXISTS action (" \
+        "GameID INTEGER NOT NULL," \
+        "RoundNumber INTEGER NOT NULL," \
+        "SequenceNumber INTEGER NOT NULL," \
+		"ActingPlayer INTEGER NOT NULL," \
+        "Phase INTEGER NOT NULL," \
+        "Action INTEGER NOT NULL," \
+        "PRIMARY KEY (GameID, RoundNumber, SequenceNumber)," \
+        "FOREIGN KEY (GameID, RoundNumber) " \
+        "REFERENCES round(GameID, RoundNumber)" \
+        ");";
+    if (sqlite3_exec(db, sql, nullptr, nullptr, &errMsg) != SQLITE_OK) {
+        std::cout << "Error creating table: " << errMsg << "\n";
+        sqlite3_free(errMsg);
+        sqlite3_close(db);
+        std::exit(1);
+    }
     // initialize the game
     Game d1 = Game(player_id[0], player_id[1]);
     // run simulation
     for (int i = 1; i <= num_games; i++) {
         std::cout << "\n\n\nGAME " << i << "\n";
-		d1.playGame();
+        //insert into Game table before other tables have to insert into tables of their own
+		/*sql = "INSERT INTO game " \
+            "(Bot1ID, Bot2ID, Starting_Chip_Count) " \
+            "VALUES (1, 2, 1000);";
+        if (sqlite3_exec(db, sql, nullptr, nullptr, &errMsg) != SQLITE_OK) {
+            std::cout << "Error inserting: " << errMsg << "\n";
+            sqlite3_free(errMsg);
+            //break loop to go straight to closing database connection
+            break;
+        }
+        else {
+            int game_id = sqlite3_last_insert_rowid(db);
+        }*/
+		d1.playGame(num_chips, db);
+
     }
 
 	// close database connection
@@ -96,16 +130,3 @@ int main()
     std::cout << "END OF PROGRAM";
     return 0;
 }
-
-// default VS template comments here because I might make use of the information later.
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file

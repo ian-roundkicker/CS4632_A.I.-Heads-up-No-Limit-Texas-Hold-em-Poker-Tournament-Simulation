@@ -1,5 +1,6 @@
 {
   "num_games": 10,
+  "num_chips": 5,
   "append_to_db": false,
   "Bot1": 1,
   "Bot2": 4

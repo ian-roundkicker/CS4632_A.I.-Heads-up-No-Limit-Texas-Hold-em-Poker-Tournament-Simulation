@@ -18,7 +18,6 @@ Game::Game(int player1, int player2) {
 
 }
 
-//todo: change active_players to betting_players
 void Game::handle_bets() {
     int proposed_bet = current_bet;
     int decision;
@@ -70,7 +69,8 @@ void Game::temp_postbethandle() {
 	players.at(1).clear_cards();
 }
 
-void Game::playGame() {
+void Game::playGame(int num_chips, sqlite3* db) { // it's probably bad practice to have the database be required to be open by default but I'm just using this once so why bother?
+    //reset active players to contain all the players at the start of the game
     if (active_players.size() > 0) {
         active_players.clear();
     }
@@ -78,8 +78,9 @@ void Game::playGame() {
         active_players.push_back(&players.at(i));
     }
     for (PlayerHand* p : active_players) {
-        p->available_chips = 5;
+        p->available_chips = num_chips; // set available chips to the value in the JSON
     }
+	//reset community cards pointers
     for (int i = 0; i < 5; i++) {
         community_cards.at(i) = nullptr;
     }
@@ -164,14 +165,10 @@ void Game::playGame() {
         }
 
         std::cout << "\n";
-        /*for (int i = 0; i < 5; i++) {
-            std::cout << "Community card " << i + 1 << ": " << community_cards.at(i)->getName() << "\n";
-        }*/
 
         rank_hands();
 		
     }
-    //players.clear();
     
 }
 
