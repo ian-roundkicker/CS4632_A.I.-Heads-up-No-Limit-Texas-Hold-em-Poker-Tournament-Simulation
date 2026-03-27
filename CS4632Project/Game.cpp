@@ -73,6 +73,35 @@ static void insert_round(sqlite3* db, PlayerHand* p1, PlayerHand* p2, int round_
     sqlite3_finalize(stmt);
 }
 
+static void insert_action(sqlite3* db, int game_id, int round_number, int sequence_number, int acting_player, int phase, int action) {
+    const char* sql = "INSERT INTO action (GameID, RoundNumber, SequenceNumber, ActingPlayer, Phase, Action) VALUES (?, ?, ?, ?, ?, ?);";
+    sqlite3_stmt* stmt;
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
+        std::cout << "Error preparing statement: " << sqlite3_errmsg(db) << "\n";
+        sqlite3_close(db);
+        std::exit(1);
+    }
+    if (sqlite3_bind_int(stmt, 1, game_id) != SQLITE_OK ||
+        sqlite3_bind_int(stmt, 2, round_number) != SQLITE_OK ||
+        sqlite3_bind_int(stmt, 3, sequence_number) != SQLITE_OK ||
+        sqlite3_bind_int(stmt, 4, acting_player) != SQLITE_OK ||
+        sqlite3_bind_int(stmt, 5, phase) != SQLITE_OK ||
+        sqlite3_bind_int(stmt, 6, action) != SQLITE_OK)
+        {
+        std::cout << "Error binding parameters: " << sqlite3_errmsg(db) << "\n";
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        std::exit(1);
+    }
+    if (sqlite3_step(stmt) != SQLITE_DONE) {
+        std::cout << "Error executing statement: " << sqlite3_errmsg(db) << "\n";
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        std::exit(1);
+    }
+    sqlite3_finalize(stmt);
+}
+
 Game::Game(int player1, int player2) {
 	current_bet = 0;
     cards_handed = 0;
@@ -88,14 +117,18 @@ Game::Game(int player1, int player2) {
     // initilize active_players to contain all the players at the start of the game
     active_players = std::vector<PlayerHand*>();
     community_cards = std::array<Card*, 5>();
+	sequence_number = 1;
 
 }
 
-void Game::handle_bets() {
+void Game::handle_bets(sqlite3* db, int round_number, int game_id, int phase) {
     int proposed_bet = current_bet;
     int decision;
     for (int i = 0; true; i++) {
         decision = betting_players.at(i % 2)->behavior->decideAction(&betting_players.at(i % 2)->cards, &community_cards, proposed_bet, betting_players.at(i % 2)->available_chips);
+		// log the action to the database here
+		std::cout << "Sequence Number: " << sequence_number << "\n"; 
+		insert_action(db, game_id, round_number, sequence_number++, betting_players.at(i % 2)->player_id, phase, decision);
         if (decision == -1) {
             std::cout << "Player " << betting_players.at(i%2)->player_id << " folded.\n";
             betting_players.erase(betting_players.begin() + i%2);
@@ -153,6 +186,7 @@ int Game::playGame(int num_chips, sqlite3* db, int game_id) { // it's probably b
     }
     //change to for loop to increment round number
     for (int round_number = 1; active_players.size() > 1; round_number++) {
+		sequence_number = 1;
         // If we have already run this function and I forgot to clear the cards, clear the cards from each player's deck
         if (cards_handed > 0) {
             clear_cards();
@@ -183,11 +217,10 @@ int Game::playGame(int num_chips, sqlite3* db, int game_id) { // it's probably b
 		std::cout << "\n";
 
         betting_players = active_players;
-
 		insert_round(db, active_players.at(0), active_players.at(1), round_number, game_id);
 
         // hand pre-flop betting
-		handle_bets();
+		handle_bets(db, round_number, game_id, 0);
         if (betting_players.size() == 1) {
 			temp_postbethandle(db, round_number, game_id);
             continue;
@@ -204,7 +237,7 @@ int Game::playGame(int num_chips, sqlite3* db, int game_id) { // it's probably b
         
 
         // handle raising and player behavior here.
-        handle_bets();
+        handle_bets(db, round_number, game_id, 1);
         if (betting_players.size() == 1) {
             temp_postbethandle(db, round_number, game_id);
             continue;
@@ -216,7 +249,7 @@ int Game::playGame(int num_chips, sqlite3* db, int game_id) { // it's probably b
 		std::cout << "The fourth community card is: " << community_cards.at(3)->getName() << "\n\n";
 
         // handle raising and player behavior here.
-        handle_bets();
+        handle_bets(db, round_number, game_id, 2);
         if (betting_players.size() == 1) {
             temp_postbethandle(db, round_number, game_id);
             continue;
@@ -228,7 +261,7 @@ int Game::playGame(int num_chips, sqlite3* db, int game_id) { // it's probably b
 		std::cout << "The fifth community card is: " << community_cards.at(4)->getName() << "\n\n";
 
         // handle raising and player behavior here.
-        handle_bets();
+        handle_bets(db, round_number, game_id, 3);
         if (betting_players.size() == 1) {
             temp_postbethandle(db, round_number, game_id);
             continue;

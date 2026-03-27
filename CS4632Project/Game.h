@@ -19,6 +19,7 @@ public:
     int cards_handed;
     std::array<Card*, 5> community_cards;
     int current_bet;
+	int sequence_number;
     // rd and mt are required for shuffling
     std::random_device rd = std::random_device();
     std::mt19937 mt = std::mt19937(rd());
@@ -26,7 +27,7 @@ public:
     //initializes the cards and the players. Does not hand out any cards
     Game(int player1, int player2);
 
-	void handle_bets();
+	void handle_bets(sqlite3* db, int round_number, int game_id, int phase);
 
     // made this function out of desperation
     void temp_postbethandle(sqlite3* db, int round_number, int game_id);

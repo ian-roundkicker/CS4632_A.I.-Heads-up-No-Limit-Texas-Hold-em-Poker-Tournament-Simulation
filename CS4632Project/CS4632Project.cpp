@@ -10,6 +10,7 @@
 // sqlite-amalgamation version 3.51.3
 #include <sqlite3.h>
 #include "Game.h"
+#include <chrono>
 
 static void create_tables(sqlite3* db) {
     //initialize tables
@@ -54,7 +55,7 @@ static void create_tables(sqlite3* db) {
         "ActingPlayer INTEGER NOT NULL," \
         "Phase INTEGER NOT NULL," \
         "Action INTEGER NOT NULL," \
-        "PRIMARY KEY (GameID, RoundNumber, SequenceNumber)," \
+        "PRIMARY KEY (GameID, RoundNumber, SequenceNumber, Phase)," \
         "FOREIGN KEY (GameID, RoundNumber) " \
         "REFERENCES round(GameID, RoundNumber)" \
         ");";
@@ -148,6 +149,9 @@ int main()
     }
     //initialize the sqlite database
 	sqlite3* db;
+    if (!append_to_db) {
+        std::remove("simulation.db");
+    }
 	sqlite3_open("simulation.db", &db);
     if (db == nullptr) {
         std::cout << "Error opening database.\n";
@@ -158,6 +162,8 @@ int main()
     Game d1 = Game(player_id[0], player_id[1]);
     
     // run simulation
+    // I can't believe I'm actually using auto...
+    auto start_time = std::chrono::steady_clock::now();
     for (int i = 1; i <= num_games; i++) {
         std::cout << "\n\n\nGAME " << i << "\n";
         //insert into Game table before other tables have to insert into tables of their own
@@ -165,6 +171,7 @@ int main()
         int game_id = sqlite3_last_insert_rowid(db);
 	    add_winner(db, game_id, d1.playGame(num_chips, db, game_id));
     }
+	std::cout << "Total simulation time: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time).count() << " ms\n"; 
 	// close database connection
 	sqlite3_close(db);
     std::cout << "END OF PROGRAM";
