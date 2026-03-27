@@ -4,6 +4,7 @@
 #include <random>
 // sqlite-amalgamation version 3.51.3
 #include <sqlite3.h>
+#include <string.h>
 class Game {// Game class (formerly Deck class) handles core simulation logic
 public:
     // array of type Card because I wanted the array to be of a fixed size. 
@@ -28,13 +29,13 @@ public:
 	void handle_bets();
 
     // made this function out of desperation
-    void temp_postbethandle();
+    void temp_postbethandle(sqlite3* db, int round_number, int game_id);
 
     // Simulates one poker game. We are on texas hold'em
-    int playGame(int num_chips, sqlite3* db);
+    int playGame(int num_chips, sqlite3* db, int game_id);
 
     // Prints out hands in the order of least to greatest (which is also best hand to worst hand)
-    void rank_hands();
+    void rank_hands(sqlite3* db, int round_number, int game_id);
 
     // clears the cards from each player's hand and resets cards_handed
     void clear_cards();

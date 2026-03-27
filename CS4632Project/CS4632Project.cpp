@@ -163,7 +163,7 @@ int main()
         //insert into Game table before other tables have to insert into tables of their own
         insert_game(db, player_id[0], player_id[1], num_chips);
         int game_id = sqlite3_last_insert_rowid(db);
-	    add_winner(db, game_id, d1.playGame(num_chips, db));
+	    add_winner(db, game_id, d1.playGame(num_chips, db, game_id));
     }
 	// close database connection
 	sqlite3_close(db);
