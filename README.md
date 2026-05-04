@@ -1,9 +1,5 @@
 # CS4632_A.I.-Heads-up-No-Limit-Texas-Hold-em-Poker-Tournament-Simulation
-In this project I'm making a simulation comparing various Poker AIs. Currently this project simulates a game of Heads Up Texas Hold'Em where both players do not fold and do not call (because neither feature is implemented). Currently cards are shuffled and dealt to the two players. Five community cards are laid down, then the hands are compared and the winning player gets a chip from the losing player.
-
-The framework for A.I implementation should be added as well as the models themselves. In addition, data collection (actually storing simulation data) will need to be implemented following A.I implementation.
-
-The plan to use models based on the University of Alberta Computer Poker Research Group's incredible models has been called into question, but I hope that I am still able to accomplish the task.
+This project is a simulation of Heads Up No Limit Texas Hold'Em poker allowing for you to run games of custom Poker Bots against each other.
 
 # Installation instructions
 Option 1: Visual Studio
@@ -26,7 +22,14 @@ If you are unable to use CMake to generate Visual Studio .lib files, check if yo
 
 # Usage
 Currently the user is unable to set parameters without altering code. You run the simulation by running it in Visual Studio (or compiling it with GCC).
-There is no configuration at the moment, but I will change it in the next implementation.
+
+# Configuration
+configuration.json has the following parameters:
+  "num_games" - number of games before program stops. Each game will continue until one player is out of chips
+  "num_chips" - starting number of chips for both players
+  "append_to_db" - true to append to current database, false to delete current database
+  "Bot1" - consult PlayerHand.cpp to see what behaviors there are. Set the value to one from the switch statement
+  "Bot2" - same as bot1
 
 # Expected output/behavior
 The simulation runs until only one player has chips. If a variable in a for loop at the bottom of the main method is changed, more than one game may be played.
@@ -70,7 +73,7 @@ Here is a list of the components:
 Card: Represents one card (uses an integer)
 Game: Manages every aspect of the game
 PlayerHand: Represents a player
+AgentBehavior: Abstract Class all bots inherit from
 
 No other component has been added yet. I may do a Commit later to specify details on the functions.
 My original UML design was very rushed. I made one major deviation from my initial concept: PlayerHand (Player) is a class and not an interface. In addition, any calls to A.I models will be done with a function either passed in the constructor or modified with a method.
-Program flow is similar to what was presented in my initial UML diagram, but it is different because we do not have data collection or A.I models yet.
